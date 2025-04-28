@@ -1,1 +1,42 @@
+const int TRIG_PIN = 12;
+const int ECHO_PIN = 11;
 
+const float SOUND_SPEED = 0.0343;
+
+void setup(){
+  Serial.begin(9600);
+  pinMode(TRIG_PIN, OUTPUT);
+  pinMode(ECHO_PIN, INPUT);
+}
+
+long medirDistanciaCm() {
+  digitalWrite(TRIG_PIN, LOW);
+  delayMicroseconds(2);
+
+  digitalWrite(TRIG_PIN, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIG_PIN, LOW);
+
+  long duracao = pulseIn(ECHO_PIN, HIGH, 30000);
+
+  long distancia = (duracao * SOUND_SPEED) / 2.0;
+  return distancia;
+
+}
+
+void loop() {
+  if (Serial.available()){
+    String cmd = Serial.readStringUntil('\n');
+    cmd.trim();
+
+    if(cmd == "REQ") {
+      long dist = medirDistanciaCm();
+
+      if (dist <= 0) {
+        Serial.println("-----");
+      }else{
+        Serial.println(dist);
+      }
+    }
+  }
+}
