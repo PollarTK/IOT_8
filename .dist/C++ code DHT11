@@ -1,0 +1,43 @@
+#include <SPI.h>
+#include <Ethernet.h>
+#include <dht.h>//INCLUSÃO DE BIBLIOTECA
+byte mac[] = {0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0x09};
+//byte mac[] = {0xDE,0xAD,0xBE,0xEF,0xFE,0xED};
+
+dht DHT; //VARIÁVEL DO TIPO DHT
+IPAddress ip(10,0,0,167);          // coloque um IP livre
+EthernetServer server(5000);
+const int LED = 7;
+const int pinoDHT11 = A2; //PINO ANALÓGICO UTILIZADO PELO DHT11
+
+void setup() {
+  Serial.begin(9600); //INICIALIZA A SERIAL
+  delay(2000); //INTERVALO DE 2 SEGUNDO ANTES DE INICIAR
+  pinMode(LED, OUTPUT);
+  Ethernet.begin(mac, ip);            // pode usar Ethernet.begin(mac) p/ DHCP
+  server.begin();
+}
+
+void loop() {
+  EthernetClient client = server.available();
+  if (client) {
+    String cmd = client.readStringUntil('\n'); // espera linha
+    cmd.trim();
+    if      (cmd == "ligar")   digitalWrite(LED, HIGH);
+    else if (cmd == "desligar")digitalWrite(LED, LOW);
+    else if (cmd == "dht"){
+    DHT.read11(pinoDHT11); //LÊ AS INFORMAÇÕES DO SENSOR
+    Serial.print("Umidade: "); //IMPRIME O TEXTO NA SERIAL
+    Serial.print(DHT.humidity); //IMPRIME NA SERIAL O VALOR DE UMIDADE MEDIDO
+    Serial.print("%"); //ESCREVE O TEXTO EM SEGUIDA
+    Serial.print(" / Temperatura: "); //IMPRIME O TEXTO NA SERIAL
+    Serial.print(DHT.temperature, 0); //IMPRIME NA SERIAL O VALOR DE UMIDADE MEDIDO E REMOVE A PARTE DECIMAL
+    Serial.println("*C"); //IMPRIME O TEXTO NA SERIAL
+    }
+    client.print(int(DHT.temperature));
+    client.print(",");
+    client.println(int(DHT.humidity));     // simples ACK
+    client.stop();
+  }
+  
+}
